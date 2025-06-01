@@ -3,12 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Ensure --font-luckiest-guy is available if next/font doesn't inject it globally as expected */
+  /* Usually next/font handles this, but as a fallback for testing: */
+  /* --font-luckiest-guy: "Luckiest Guy", cursive; */ 
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  /* --font-sans: var(--font-geist-sans); */ /* Keep commented */
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +25,10 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-luckiest-guy), cursive !important; /* APPLYING FONT DIRECTLY + !important */
 }
+
+/* Optional: If you want to use a Tailwind class instead of direct body styling */
+/* .font-luckiest-guy-explicit {
+  font-family: var(--font-luckiest-guy), cursive !important;
+} */
