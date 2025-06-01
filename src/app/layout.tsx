@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // import { Geist, Geist_Mono } from "next/font/google"; // Keep if you want to use Geist elsewhere
 import { Luckiest_Guy } from "next/font/google"; // Import Luckiest Guy
 import "./globals.css";
+import { Providers } from "./providers";
 
 // Setup Luckiest Guy font
 const luckiestGuy = Luckiest_Guy({
@@ -22,8 +23,8 @@ const luckiestGuy = Luckiest_Guy({
 // });
 
 export const metadata: Metadata = {
-  title: "My Awesome Blog", // Updated title
-  description: "Stories & ideas to drive business strategy", // Updated description
+  title: "ABQ Hotspot News",
+  description: "Your source for Albuquerque news, events, and community stories",
 };
 
 export default function RootLayout({
@@ -35,7 +36,9 @@ export default function RootLayout({
     <html lang="en">
       {/* The luckiestGuy.variable class from next/font ensures --font-luckiest-guy is defined */}
       <body className={`${luckiestGuy.variable} antialiased`}> {/* Simplified className */}
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
