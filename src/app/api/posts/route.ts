@@ -5,15 +5,15 @@ import { z } from 'zod'
 const createPostSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
-  excerpt: z.string().optional(),
+  excerpt: z.string().optional().transform(val => val === '' ? undefined : val),
   featured: z.boolean().default(false),
   status: z.enum(['DRAFT', 'PUBLISHED', 'SCHEDULED']).default('DRAFT'),
-  publishedAt: z.string().optional(),
-  featuredImage: z.string().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
+  publishedAt: z.string().optional().transform(val => val === '' ? undefined : val),
+  featuredImage: z.string().optional().transform(val => val === '' ? undefined : val),
+  seoTitle: z.string().optional().transform(val => val === '' ? undefined : val),
+  seoDescription: z.string().optional().transform(val => val === '' ? undefined : val),
   authorId: z.string(),
-  categoryId: z.string().optional(),
+  categoryId: z.string().optional().transform(val => val === '' ? undefined : val),
   tags: z.array(z.string()).optional(),
 })
 
@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    
     const validatedData = createPostSchema.parse(body)
 
     // Generate slug from title
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
         seoDescription: validatedData.seoDescription,
         authorId: validatedData.authorId,
         categoryId: validatedData.categoryId,
-        tags: validatedData.tags ? {
+        tags: validatedData.tags && validatedData.tags.length > 0 ? {
           connectOrCreate: validatedData.tags.map(tagName => ({
             where: { slug: tagName.toLowerCase().replace(/\s+/g, '-') },
             create: {

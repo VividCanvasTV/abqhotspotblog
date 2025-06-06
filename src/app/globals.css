@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
   /* Ensure --font-luckiest-guy is available if next/font doesn't inject it globally as expected */
   /* Usually next/font handles this, but as a fallback for testing: */
   /* --font-luckiest-guy: "Luckiest Guy", cursive; */ 
@@ -19,16 +22,53 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-luckiest-guy), cursive !important; /* APPLYING FONT DIRECTLY + !important */
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  color: rgb(var(--foreground-rgb));
+  /* font-family: var(--font-luckiest-guy), cursive !important; TEMPORARILY COMMENTED OUT */
 }
 
 /* Optional: If you want to use a Tailwind class instead of direct body styling */
 /* .font-luckiest-guy-explicit {
   font-family: var(--font-luckiest-guy), cursive !important;
 } */
+
+/* Custom animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Line clamp utility classes */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

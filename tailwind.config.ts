@@ -18,6 +18,8 @@ const config: Config = {
         // Albuquerque Hotspot brand colors
         hotspot: {
           red: '#DC2626',      // A vibrant red
+          orange: '#F97316',   // Orange for gradients
+          yellow: '#EAB308',   // Yellow for gradients  
           gold: '#F59E0B',     // A warm gold/amber
           black: '#1F2937',    // A rich dark gray-black
           white: '#FFFFFF',    // Pure white
@@ -42,6 +44,18 @@ const config: Config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      animation: {
+        'marquee': 'marquee 30s linear infinite',
+        'marquee-fast': 'marquee 20s linear infinite',
+        'marquee-slow': 'marquee 40s linear infinite',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
       },
     },
   },

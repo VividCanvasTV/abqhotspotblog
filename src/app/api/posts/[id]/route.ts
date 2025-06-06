@@ -1,29 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 const updatePostSchema = z.object({
   title: z.string().min(1).optional(),
   content: z.string().min(1).optional(),
-  excerpt: z.string().optional(),
+  excerpt: z.string().optional().transform(val => val === '' ? undefined : val),
   featured: z.boolean().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'SCHEDULED']).optional(),
-  publishedAt: z.string().optional(),
-  featuredImage: z.string().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
-  categoryId: z.string().optional(),
+  publishedAt: z.string().optional().transform(val => val === '' ? undefined : val),
+  featuredImage: z.string().optional().transform(val => val === '' ? undefined : val),
+  seoTitle: z.string().optional().transform(val => val === '' ? undefined : val),
+  seoDescription: z.string().optional().transform(val => val === '' ? undefined : val),
+  categoryId: z.string().optional().transform(val => val === '' ? undefined : val),
   tags: z.array(z.string()).optional(),
 })
+
+// Helper function to check permissions
+async function checkPostPermissions(postId: string, session: any) {
+  if (!session?.user?.id) {
+    return { hasPermission: false, error: 'Unauthorized' }
+  }
+
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { authorId: true }
+  })
+
+  if (!post) {
+    return { hasPermission: false, error: 'Post not found' }
+  }
+
+  const userRole = session.user.role
+  const isAuthor = post.authorId === session.user.id
+  const canEdit = userRole === 'ADMIN' || userRole === 'EDITOR' || isAuthor
+
+  return { 
+    hasPermission: canEdit, 
+    error: canEdit ? null : 'Insufficient permissions',
+    post 
+  }
+}
+
+// Helper function to check publishing permissions
+function canPublish(userRole: string, isAuthor: boolean) {
+  // Only ADMINs and EDITORs can publish directly
+  // AUTHORs can only save as draft
+  return userRole === 'ADMIN' || userRole === 'EDITOR'
+}
 
 // GET /api/posts/[id] - Get a single post
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const post = await prisma.post.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         author: {
           select: { id: true, name: true, email: true, avatar: true }
@@ -53,15 +89,26 @@ export async function GET(
 // PUT /api/posts/[id] - Update a post
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions)
+    const { id } = await params
     const body = await request.json()
     const validatedData = updatePostSchema.parse(body)
 
+    // Check permissions
+    const { hasPermission, error } = await checkPostPermissions(id, session)
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error },
+        { status: error === 'Unauthorized' ? 401 : 403 }
+      )
+    }
+
     // Check if post exists
     const existingPost = await prisma.post.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!existingPost) {
@@ -69,6 +116,18 @@ export async function PUT(
         { error: 'Post not found' },
         { status: 404 }
       )
+    }
+
+    // Check publishing permissions
+    const userRole = session?.user?.role
+    const isAuthor = existingPost.authorId === session?.user?.id
+    
+    if (validatedData.status === 'PUBLISHED' && !canPublish(userRole || '', isAuthor)) {
+      // Authors can't publish directly - force to draft
+      validatedData.status = 'DRAFT'
+      
+      // Note: In a real app, you might want to set a "pending approval" status
+      // and notify editors/admins of the submission
     }
 
     // Generate new slug if title is being updated
@@ -108,7 +167,7 @@ export async function PUT(
     }
 
     const post = await prisma.post.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         author: {
@@ -138,12 +197,27 @@ export async function PUT(
 // DELETE /api/posts/[id] - Delete a post
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if post exists
+    const session = await getServerSession(authOptions)
+    const { id } = await params
+
+    // Check permissions
+    const { hasPermission, error } = await checkPostPermissions(id, session)
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error },
+        { status: error === 'Unauthorized' ? 401 : 403 }
+      )
+    }
+
+    // Additional check: Only ADMINs and EDITORs can delete posts
+    // AUTHORs can only delete their own drafts
+    const userRole = session?.user?.role
     const existingPost = await prisma.post.findUnique({
-      where: { id: params.id }
+      where: { id },
+      select: { authorId: true, status: true }
     })
 
     if (!existingPost) {
@@ -153,8 +227,17 @@ export async function DELETE(
       )
     }
 
+    const isAuthor = existingPost.authorId === session?.user?.id
+    
+    if (userRole === 'AUTHOR' && (!isAuthor || existingPost.status === 'PUBLISHED')) {
+      return NextResponse.json(
+        { error: 'Authors can only delete their own draft posts' },
+        { status: 403 }
+      )
+    }
+
     await prisma.post.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Post deleted successfully' })

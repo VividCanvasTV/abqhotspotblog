@@ -12,6 +12,7 @@ async function seed() {
         email: 'admin@abqhotspot.news',
         name: 'Admin User',
         role: 'ADMIN',
+        password: 'admin123', // Default password - should be changed in production
       },
     })
 
@@ -223,6 +224,147 @@ Don't miss this incredible celebration of flight and community spirit!`,
     })
 
     console.log('✅ Created homepage settings')
+
+    // Create sample restaurants
+    const sampleRestaurants = [
+      {
+        name: 'Sadie\'s of New Mexico',
+        description: 'Legendary New Mexican restaurant serving authentic green chile dishes since 1952.',
+        cuisine: 'New Mexican',
+        priceRange: '$$',
+        rating: 4.6,
+        reviewCount: 2847,
+        address: '6230 4th St NW, Albuquerque, NM',
+        phone: '(505) 345-5339',
+        hours: '11:00 AM - 9:00 PM',
+        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=400&fit=crop',
+        featured: true,
+        delivery: true,
+        takeout: true,
+        dineIn: true,
+        tags: JSON.stringify(['Local Favorite', 'Family-Owned', 'Historic']),
+        specialties: JSON.stringify(['Green Chile Cheeseburgers', 'Sopaipillas', 'Carne Adovada']),
+        website: 'https://sadiesofnewmexico.com',
+      },
+      {
+        name: 'The Grove Cafe & Market',
+        description: 'Farm-to-table restaurant focusing on fresh, local ingredients and creative American cuisine.',
+        cuisine: 'American',
+        priceRange: '$$$',
+        rating: 4.5,
+        reviewCount: 1923,
+        address: '600 Central Ave SE, Albuquerque, NM',
+        phone: '(505) 248-9800',
+        hours: '7:00 AM - 3:00 PM',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=400&fit=crop',
+        featured: true,
+        delivery: false,
+        takeout: true,
+        dineIn: true,
+        tags: JSON.stringify(['Farm-to-Table', 'Brunch', 'Local Ingredients']),
+        specialties: JSON.stringify(['Weekend Brunch', 'Seasonal Menus', 'Fresh Pastries']),
+      },
+      {
+        name: 'El Pinto',
+        description: 'Historic hacienda-style restaurant with beautiful courtyards, serving traditional New Mexican cuisine.',
+        cuisine: 'New Mexican',
+        priceRange: '$$',
+        rating: 4.4,
+        reviewCount: 3156,
+        address: '10500 4th St NW, Albuquerque, NM',
+        phone: '(505) 898-1771',
+        hours: '11:00 AM - 9:00 PM',
+        image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=400&fit=crop',
+        featured: true,
+        delivery: true,
+        takeout: true,
+        dineIn: true,
+        tags: JSON.stringify(['Historic', 'Outdoor Dining', 'Large Groups']),
+        specialties: JSON.stringify(['Chile Rellenos', 'Margaritas', 'Patio Dining']),
+      },
+    ]
+
+    for (const restaurant of sampleRestaurants) {
+      try {
+        await prisma.restaurant.create({
+          data: restaurant,
+        })
+      } catch (error) {
+        // Restaurant might already exist, skip
+        console.log(`Restaurant ${restaurant.name} already exists, skipping...`)
+      }
+    }
+
+    console.log('✅ Created sample restaurants')
+
+    // Create sample events
+    const sampleEvents = [
+      {
+        title: 'Old Town Art Festival',
+        description: 'Annual celebration of local artists featuring paintings, sculptures, and crafts from over 100 vendors.',
+        startDate: '2025-01-15',
+        endDate: '2025-01-17',
+        startTime: '09:00',
+        endTime: '18:00',
+        location: 'Old Town Plaza',
+        category: 'Arts & Culture',
+        price: 'Free',
+        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop',
+        organizer: 'Old Town Merchants',
+        capacity: 5000,
+        attendees: 1200,
+        featured: true,
+        tags: JSON.stringify(['Art', 'Family-Friendly', 'Outdoor']),
+      },
+      {
+        title: 'Balloon Fiesta Glow',
+        description: 'Special evening event featuring hot air balloons illuminated against the night sky.',
+        startDate: '2025-01-20',
+        endDate: '2025-01-20',
+        startTime: '18:00',
+        endTime: '22:00',
+        location: 'Balloon Fiesta Park',
+        category: 'Festival',
+        price: '$15',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
+        organizer: 'Albuquerque International Balloon Fiesta',
+        capacity: 10000,
+        attendees: 8500,
+        featured: true,
+        tags: JSON.stringify(['Balloons', 'Evening', 'Photography']),
+      },
+      {
+        title: 'Green Chile Festival',
+        description: 'Celebrate New Mexico\'s signature crop with tastings, cooking demos, and live music.',
+        startDate: '2025-02-01',
+        endDate: '2025-02-03',
+        startTime: '10:00',
+        endTime: '20:00',
+        location: 'Civic Plaza',
+        category: 'Food & Drink',
+        price: 'Free',
+        image: 'https://images.unsplash.com/photo-1556909114-4798b8e72d85?w=800&h=400&fit=crop',
+        organizer: 'City of Albuquerque',
+        capacity: 15000,
+        attendees: 0,
+        featured: true,
+        tags: JSON.stringify(['Food', 'Music', 'Local Culture']),
+      },
+    ]
+
+    for (const event of sampleEvents) {
+      try {
+        await prisma.event.create({
+          data: event,
+        })
+      } catch (error) {
+        // Event might already exist, skip
+        console.log(`Event ${event.title} already exists, skipping...`)
+      }
+    }
+
+    console.log('✅ Created sample events')
+
     console.log('🎉 Database seeded successfully!')
 
   } catch (error) {

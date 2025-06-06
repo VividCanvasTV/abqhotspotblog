@@ -1,91 +1,114 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        toast.error('Invalid credentials')
-      } else {
-        toast.success('Login successful!')
-        router.push('/admin')
-      }
-    } catch (error) {
-      toast.error('Login failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-hotspot-red via-hotspot-orange to-hotspot-yellow flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-hotspot-red font-luckiest">
-            ABQ Hotspot
-          </h1>
-          <p className="text-gray-600 mt-2">Admin Dashboard</p>
-        </div>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: 'red',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '40px',
+        borderRadius: '8px',
+        width: '100%',
+        maxWidth: '400px'
+      }}>
+        <h1 style={{
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: 'black',
+          textAlign: 'center',
+          marginBottom: '20px'
+        }}>
+          ABQ Hotspot Login
+        </h1>
+        
+        <p style={{
+          color: 'green',
+          textAlign: 'center',
+          fontSize: '18px',
+          marginBottom: '20px'
+        }}>
+          If you can see this, the page is working!
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+        <form style={{ marginTop: '20px' }}>
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '5px',
+              fontWeight: 'bold'
+            }}>
+              Email:
             </label>
             <input
               type="email"
-              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-hotspot-red focus:border-transparent"
               placeholder="admin@abqhotspot.news"
-              required
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '5px',
+              fontWeight: 'bold'
+            }}>
+              Password:
             </label>
             <input
               type="password"
-              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-hotspot-red focus:border-transparent"
-              placeholder="Enter your password"
-              required
+              placeholder="admin123"
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
             />
           </div>
 
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-hotspot-red text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-hotspot-red focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: 'blue',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '16px',
+              cursor: 'pointer'
+            }}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            Sign In
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
+        <div style={{
+          marginTop: '20px',
+          textAlign: 'center',
+          fontSize: '14px',
+          color: '#666'
+        }}>
           <p>Demo credentials:</p>
           <p>Email: admin@abqhotspot.news</p>
           <p>Password: admin123</p>
