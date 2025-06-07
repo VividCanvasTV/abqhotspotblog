@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXTAUTH_URL: process.env.NODE_ENV === 'production' 
+      ? 'https://abqhotspotblog-production.up.railway.app' 
+      : 'http://localhost:3000'
+  },
   images: {
-    domains: ['res.cloudinary.com'],
+    domains: ['images.unsplash.com', 'res.cloudinary.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,6 +17,13 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['@prisma/client', 'prisma'],
+  experimental: {
+    // Enable server-side rendering optimizations
+    serverActions: {
+      // Enable server actions if needed
+      allowedOrigins: ['localhost:3000', 'abqhotspotblog-production.up.railway.app']
+    }
+  }
 };
 
 export default nextConfig;
