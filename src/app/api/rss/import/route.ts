@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
-
+    
     const body = await request.json().catch(() => ({}))
     const { url, feedName, action } = body
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         counts
       })
     }
-
+      
     if (action === 'clear_feed' && body.feedName) {
       const importer = new RSSImporter()
       const cleared = await importer.clearFeedPosts(body.feedName)
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
 
     const importer = new RSSImporter()
     const feeds = importer.getFeeds()
-
+    
     return NextResponse.json({
       feeds: feeds.map(feed => ({
         name: feed.name,

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { stat, mkdir } from 'fs/promises'
+import { v2 as cloudinary } from 'cloudinary'
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 // GET /api/media - Get all media files
 export async function GET(request: NextRequest) {
@@ -50,7 +55,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/media - Upload new media file
+// POST /api/media - Upload new media file to Cloudinary
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData()
@@ -60,36 +65,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    // Convert file to buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads')
-    
-    try {
-      await stat(uploadDir)
-    } catch (e: any) {
-      if (e.code === 'ENOENT') {
-        await mkdir(uploadDir, { recursive: true })
-      } else {
-        console.error('Error creating upload directory:', e)
-        return NextResponse.json({ error: 'Could not create upload directory' }, { status: 500 })
-      }
-    }
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: 'abqhotspot-blog',
+          public_id: `${Date.now()}-${file.name.replace(/\s/g, '_').replace(/\.[^/.]+$/, "")}`,
+        },
+        (error, result) => {
+          if (error) reject(error)
+          else resolve(result)
+        }
+      ).end(buffer)
+    }) as any
 
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`
-    const filename = `${uniqueSuffix}-${file.name.replace(/\s/g, '_')}`
-    const filepath = join(uploadDir, filename)
-    const fileUrl = `/uploads/${filename}`
-
-    await writeFile(filepath, buffer)
-
+    // Save to database
     const newMedia = await prisma.media.create({
       data: {
-        filename: filename,
+        filename: uploadResult.public_id,
         originalName: file.name,
         mimeType: file.type,
         size: file.size,
-        url: fileUrl,
+        url: uploadResult.secure_url,
       },
     })
     

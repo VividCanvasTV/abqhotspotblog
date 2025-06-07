@@ -345,24 +345,21 @@ export class RSSImporter {
       
       console.log(`📄 Found ${items.length} items in ${feed.name}`)
 
-      let skipReasons = {
-        invalid: 0,
-        keywords: 0,
-        duplicates: 0
-      }
+      // Track skipping reasons for better logging
+      const skipReasons = []
 
       // Process items with filtering
       for (const item of items) {
         if (!this.isValidItem(item)) {
           result.skipped++
-          skipReasons.invalid++
+          skipReasons.push('invalid')
           console.log(`⚠️ Skipped invalid item: ${item.title?.substring(0, 50) || 'No title'}`)
           continue
         }
 
         if (!this.passesKeywordFilter(item, feed)) {
           result.skipped++
-          skipReasons.keywords++
+          skipReasons.push('keyword')
           console.log(`🔍 Skipped keyword filter: ${item.title?.substring(0, 50)}`)
           continue
         }
@@ -373,7 +370,7 @@ export class RSSImporter {
         const isDuplicate = await this.isSmartDuplicate(item, feed, externalId)
         if (isDuplicate) {
           result.skipped++
-          skipReasons.duplicates++
+          skipReasons.push('duplicate')
           console.log(`🔄 Skipped duplicate: ${item.title?.substring(0, 50)}`)
           continue
         }
@@ -392,7 +389,7 @@ export class RSSImporter {
       
       const processingRate = Math.round((items.length / result.duration) * 1000)
       console.log(`✅ ${feed.name}: ${result.imported} imported, ${result.skipped} skipped (${processingRate} items/sec)`)
-      console.log(`   📊 Skip reasons: ${skipReasons.duplicates} duplicates, ${skipReasons.keywords} keyword filter, ${skipReasons.invalid} invalid`)
+      console.log(`   📊 Skip reasons: ${skipReasons.join(', ')}`)
       
       if (result.imported > 0) {
         console.log(`   🎯 Import efficiency: ${Math.round((result.imported / items.length) * 100)}% of items imported`)
@@ -725,7 +722,7 @@ export class RSSImporter {
 
   private parseRSSItem(item: any, feed: RSSFeed, publishDate: Date): ImportedPost {
     // Try multiple content fields in order of preference
-    let rawContent = item['content:encoded'] || 
+    const rawContent = item['content:encoded'] || 
                      item.content || 
                      item['content'] || 
                      item.summary || 
