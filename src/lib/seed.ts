@@ -1,8 +1,12 @@
 import { prisma } from './db'
+import { hash } from 'bcryptjs'
 
 async function seed() {
   try {
     console.log('🌱 Seeding database...')
+
+    // Hash the admin password
+    const hashedPassword = await hash('admin123', 12)
 
     // Create default admin user
     const adminUser = await prisma.user.upsert({
@@ -12,7 +16,7 @@ async function seed() {
         email: 'admin@abqhotspot.news',
         name: 'Admin User',
         role: 'ADMIN',
-        password: 'admin123', // Default password - should be changed in production
+        password: hashedPassword,
       },
     })
 

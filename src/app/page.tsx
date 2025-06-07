@@ -26,16 +26,18 @@ interface Restaurant {
   rating: number
   reviewCount: number
   address: string
-  phone?: string
-  hours?: string
-  image?: string
+  phone: string | null
+  hours: string | null
+  image: string | null
   featured: boolean
   delivery: boolean
   takeout: boolean
   dineIn: boolean
-  tags: string[]
-  specialties: string[]
-  website?: string
+  tags: string
+  specialties: string
+  website: string | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 async function getFeaturedPosts() {
@@ -124,17 +126,12 @@ async function getBreakingNews() {
 
 async function getFeaturedRestaurants() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/restaurants?featured=true&limit=6`, {
-      next: { revalidate: 60 } // Revalidate every minute
+    const restaurants = await prisma.restaurant.findMany({
+      where: { featured: true },
+      take: 6,
+      orderBy: { createdAt: 'desc' }
     })
-    
-    if (response.ok) {
-      const data = await response.json()
-      return data.restaurants || []
-    } else {
-      console.error('Error fetching featured restaurants:', response.statusText)
-      return []
-    }
+    return restaurants
   } catch (error) {
     console.error('Error fetching featured restaurants:', error)
     return []
@@ -639,14 +636,21 @@ export default async function HomePage() {
                     {restaurant.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {restaurant.specialties.slice(0, 2).map((specialty: string) => (
-                      <span
-                        key={specialty}
-                        className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
-                      >
-                        {specialty}
-                      </span>
-                    ))}
+                    {(() => {
+                      try {
+                        const specialties = JSON.parse(restaurant.specialties || '[]')
+                        return specialties.slice(0, 2).map((specialty: string) => (
+                          <span
+                            key={specialty}
+                            className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
+                          >
+                            {specialty}
+                          </span>
+                        ))
+                      } catch {
+                        return null
+                      }
+                    })()}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-700">
