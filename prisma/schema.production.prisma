@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  AUTHOR
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(AUTHOR)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts Post[]
+  restaurantReviews RestaurantReview[]
+  eventAttendances EventAttendance[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  color       String?
+
+  posts Post[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  posts Post[]
+
+  @@map("tags")
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  uploadedAt   DateTime @default(now())
+
+  @@map("media")
+}
+
+model Post {
+  id             String     @id @default(cuid())
+  title          String
+  slug           String     @unique
+  content        String
+  excerpt        String?
+  featured       Boolean    @default(false)
+  status         PostStatus @default(DRAFT)
+  publishedAt    DateTime?
+  featuredImage  String?
+  seoTitle       String?
+  seoDescription String?
+  
+  // RSS Import fields
+  externalId     String?    @unique // Unique identifier for imported posts
+  externalSource String?             // Name of the RSS feed source
+  externalUrl    String?             // Original URL of the imported post
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  tags       Tag[]
+
+  @@map("posts")
+}
+
+model Restaurant {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  cuisine      String
+  priceRange   String   // $, $$, $$$, $$$$
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  address      String
+  phone        String?
+  hours        String?
+  website      String?
+  image        String?
+  featured     Boolean  @default(false)
+  delivery     Boolean  @default(false)
+  takeout      Boolean  @default(false)
+  dineIn       Boolean  @default(true)
+  tags         String   // JSON array as string
+  specialties  String   // JSON array as string
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  reviews RestaurantReview[]
+
+  @@map("restaurants")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  startDate   String   // Store as string for simplicity
+  endDate     String?
+  startTime   String?
+  endTime     String?
+  location    String
+  category    String
+  price       String?
+  image       String?
+  organizer   String?
+  capacity    Int?
+  attendees   Int      @default(0)
+  featured    Boolean  @default(false)
+  tags        String   // JSON array as string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendanceList EventAttendance[]
+
+  @@map("events")
+}
+
+model HomepageSettings {
+  id           String  @id @default(cuid())
+  heroTitle    String?
+  heroSubtitle String?
+  featuredPostId String?
+
+  @@map("homepage_settings")
+}
+
+model RestaurantReview {
+  id           String   @id @default(cuid())
+  rating       Int      // 1-5 stars
+  comment      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, restaurantId]) // One review per user per restaurant
+  @@map("restaurant_reviews")
+}
+
+model EventAttendance {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId]) // One attendance per user per event
+  @@map("event_attendances")
+} 

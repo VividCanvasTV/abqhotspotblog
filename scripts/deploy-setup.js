@@ -30,31 +30,29 @@ console.log('  - DATABASE_URL:', hasDatabaseUrl ? 'SET' : 'NOT SET');
 if (isRailwayBuild || (isProduction && isPostgreSQLUrl)) {
   console.log('📊 Switching to PostgreSQL for production...');
   
-  // Read the current schema.prisma
+  // Use the production schema file
   const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
-  let schema = fs.readFileSync(schemaPath, 'utf8');
+  const productionSchemaPath = path.join(__dirname, '..', 'prisma', 'schema.production.prisma');
   
-  // Replace SQLite with PostgreSQL
-  schema = schema.replace(
-    /provider = "sqlite"/g,
-    'provider = "postgresql"'
-  );
-  
-  // Write the updated schema
-  fs.writeFileSync(schemaPath, schema);
-  console.log('✅ Database provider updated to PostgreSQL');
+  if (fs.existsSync(productionSchemaPath)) {
+    console.log('📄 Using production schema file...');
+    const productionSchema = fs.readFileSync(productionSchemaPath, 'utf8');
+    fs.writeFileSync(schemaPath, productionSchema);
+    console.log('✅ Production schema copied to main schema file');
+  } else {
+    console.log('📄 Production schema file not found, converting inline...');
+    // Fallback to inline conversion
+    let schema = fs.readFileSync(schemaPath, 'utf8');
+    schema = schema.replace(/provider = "sqlite"/g, 'provider = "postgresql"');
+    fs.writeFileSync(schemaPath, schema);
+    console.log('✅ Database provider updated to PostgreSQL');
+  }
   
   // Generate Prisma client for production
   try {
     console.log('📦 Generating Prisma client...');
     execSync('npx prisma generate', { stdio: 'inherit' });
     console.log('✅ Prisma client generated');
-    
-    // Also create a backup of the converted schema
-    const backupPath = path.join(__dirname, '..', 'prisma', 'schema.prisma.production');
-    fs.writeFileSync(backupPath, schema);
-    console.log('✅ Production schema backup created');
-    
     console.log('ℹ️  Database schema will be pushed after deployment starts');
   } catch (error) {
     console.error('❌ Prisma client generation failed:', error.message);
@@ -66,17 +64,20 @@ if (isRailwayBuild || (isProduction && isPostgreSQLUrl)) {
   
   // Force PostgreSQL for any production build
   const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
-  let schema = fs.readFileSync(schemaPath, 'utf8');
+  const productionSchemaPath = path.join(__dirname, '..', 'prisma', 'schema.production.prisma');
   
-  // Replace SQLite with PostgreSQL
-  schema = schema.replace(
-    /provider = "sqlite"/g,
-    'provider = "postgresql"'
-  );
-  
-  // Write the updated schema
-  fs.writeFileSync(schemaPath, schema);
-  console.log('✅ Database provider updated to PostgreSQL');
+  if (fs.existsSync(productionSchemaPath)) {
+    console.log('📄 Using production schema file...');
+    const productionSchema = fs.readFileSync(productionSchemaPath, 'utf8');
+    fs.writeFileSync(schemaPath, productionSchema);
+    console.log('✅ Production schema copied to main schema file');
+  } else {
+    // Fallback to inline conversion
+    let schema = fs.readFileSync(schemaPath, 'utf8');
+    schema = schema.replace(/provider = "sqlite"/g, 'provider = "postgresql"');
+    fs.writeFileSync(schemaPath, schema);
+    console.log('✅ Database provider updated to PostgreSQL');
+  }
   
   // Generate Prisma client for production
   try {
