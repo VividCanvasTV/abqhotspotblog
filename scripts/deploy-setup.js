@@ -28,15 +28,14 @@ if (isProduction && isPostgreSQLUrl) {
   fs.writeFileSync(schemaPath, schema);
   console.log('✅ Database provider updated to PostgreSQL');
   
-  // Run Prisma commands for production
+  // Generate Prisma client for production
   try {
     console.log('📦 Generating Prisma client...');
     execSync('npx prisma generate', { stdio: 'inherit' });
-    console.log('🗄️ Pushing database schema...');
-    execSync('npx prisma db push', { stdio: 'inherit' });
-    console.log('✅ Database setup complete');
+    console.log('✅ Prisma client generated');
+    console.log('ℹ️  Database schema will be pushed after deployment starts');
   } catch (error) {
-    console.error('❌ Database setup failed:', error.message);
+    console.error('❌ Prisma client generation failed:', error.message);
     process.exit(1);
   }
 } else if (isProduction && !isPostgreSQLUrl) {
