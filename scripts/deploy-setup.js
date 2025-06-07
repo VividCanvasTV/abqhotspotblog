@@ -6,12 +6,14 @@ const { execSync } = require('child_process');
 
 console.log('🚂 Railway Deployment Setup...');
 
-// Check if we're in production environment or have DATABASE_URL
-const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
+// Check if we're in Railway environment (during build DATABASE_URL might not be available)
+const isRailwayBuild = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_SERVICE_ID;
+const isProduction = process.env.NODE_ENV === 'production';
 const hasDatabaseUrl = process.env.DATABASE_URL;
 const isPostgreSQLUrl = hasDatabaseUrl && hasDatabaseUrl.startsWith('postgres');
 
-if (isProduction && isPostgreSQLUrl) {
+// Switch to PostgreSQL if we're in Railway environment (even without DATABASE_URL during build)
+if (isRailwayBuild || (isProduction && isPostgreSQLUrl)) {
   console.log('📊 Switching to PostgreSQL for production...');
   
   // Read the current schema.prisma
@@ -38,9 +40,9 @@ if (isProduction && isPostgreSQLUrl) {
     console.error('❌ Prisma client generation failed:', error.message);
     process.exit(1);
   }
-} else if (isProduction && !isPostgreSQLUrl) {
-  console.log('⚠️  Production build with SQLite - keeping SQLite for local builds');
-  console.log('✅ This is normal for local development builds');
+} else if (isProduction && !isRailwayBuild) {
+  console.log('⚠️  Production build detected but not Railway - keeping SQLite');
+  console.log('✅ This is normal for local production builds');
 } else {
   console.log('🔧 Using SQLite for local development');
 }
