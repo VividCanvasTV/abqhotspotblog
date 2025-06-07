@@ -35,6 +35,12 @@ if (isRailwayBuild || (isProduction && isPostgreSQLUrl)) {
     console.log('📦 Generating Prisma client...');
     execSync('npx prisma generate', { stdio: 'inherit' });
     console.log('✅ Prisma client generated');
+    
+    // Also create a backup of the converted schema
+    const backupPath = path.join(__dirname, '..', 'prisma', 'schema.prisma.production');
+    fs.writeFileSync(backupPath, schema);
+    console.log('✅ Production schema backup created');
+    
     console.log('ℹ️  Database schema will be pushed after deployment starts');
   } catch (error) {
     console.error('❌ Prisma client generation failed:', error.message);
