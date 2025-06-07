@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "npx prisma generate && npx prisma db push",
+    "postbuild": "node scripts/deploy-setup.js && npx prisma generate && npx prisma db push",
     "start": "NODE_ENV=production node server.js",
     "start:dev": "next start",
     "lint": "next lint"
