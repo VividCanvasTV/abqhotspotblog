@@ -352,3 +352,5 @@ You now have a complete, production-ready blog platform with admin dashboard!
 - Login with: admin@abqhotspot.news / admin123
 
 Happy blogging! 🌶️🏜️
+
+<!-- Deployment trigger: 2025-01-07 20:32:00 UTC -->
