@@ -22,8 +22,22 @@ const nextConfig: NextConfig = {
     serverActions: {
       // Enable server actions if needed
       allowedOrigins: ['localhost:3000', 'abqhotspotblog-production.up.railway.app']
-    }
-  }
+    },
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma']
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;
