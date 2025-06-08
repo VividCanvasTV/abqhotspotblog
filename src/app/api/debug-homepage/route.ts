@@ -3,9 +3,9 @@ import { prisma } from '@/lib/db'
 
 export async function GET() {
   try {
-    console.log('🔍 Debug Homepage - Fetching data...')
-
-    // Test each data source that the homepage uses
+    console.log('🔍 Debug Homepage: Starting database queries...')
+    
+    // Test the exact same query as homepage
     const featuredPosts = await prisma.post.findMany({
       where: {
         status: 'PUBLISHED',
@@ -20,83 +20,68 @@ export async function GET() {
       orderBy: { publishedAt: 'desc' },
       take: 6,
     })
-
-    const recentPosts = await prisma.post.findMany({
-      where: {
-        status: 'PUBLISHED',
-      },
-      include: {
-        author: {
-          select: { name: true, avatar: true }
-        },
-        category: true,
-      },
-      orderBy: { publishedAt: 'desc' },
-      take: 5,
-    })
-
+    
     const featuredRestaurants = await prisma.restaurant.findMany({
       where: { featured: true },
       take: 6,
       orderBy: { createdAt: 'desc' }
     })
-
+    
+    // Test basic queries
     const allPosts = await prisma.post.findMany({
       where: { status: 'PUBLISHED' },
-      select: { id: true, title: true, status: true, featured: true }
+      take: 3
     })
-
+    
     const allRestaurants = await prisma.restaurant.findMany({
-      select: { id: true, name: true, featured: true }
+      take: 3
     })
-
+    
     return NextResponse.json({
       success: true,
       debug: {
         featuredPosts: {
           count: featuredPosts.length,
-          data: featuredPosts.map(p => ({
-            id: p.id,
-            title: p.title,
-            featured: p.featured,
-            status: p.status,
-            publishedAt: p.publishedAt,
-            category: p.category?.name
-          }))
-        },
-        recentPosts: {
-          count: recentPosts.length,
-          data: recentPosts.map(p => ({
-            id: p.id,
-            title: p.title,
-            status: p.status,
-            publishedAt: p.publishedAt
+          posts: featuredPosts.map(p => ({ 
+            id: p.id, 
+            title: p.title, 
+            featured: p.featured, 
+            status: p.status 
           }))
         },
         featuredRestaurants: {
           count: featuredRestaurants.length,
-          data: featuredRestaurants.map(r => ({
-            id: r.id,
-            name: r.name,
-            featured: r.featured,
-            cuisine: r.cuisine
+          restaurants: featuredRestaurants.map(r => ({ 
+            id: r.id, 
+            name: r.name, 
+            featured: r.featured 
           }))
         },
-        summary: {
-          totalPublishedPosts: allPosts.length,
-          featuredPostsCount: allPosts.filter(p => p.featured).length,
-          totalRestaurants: allRestaurants.length,
-          featuredRestaurantsCount: allRestaurants.filter(r => r.featured).length
+        allPosts: {
+          count: allPosts.length,
+          posts: allPosts.map(p => ({ 
+            id: p.id, 
+            title: p.title, 
+            featured: p.featured, 
+            status: p.status 
+          }))
+        },
+        allRestaurants: {
+          count: allRestaurants.length,
+          restaurants: allRestaurants.map(r => ({ 
+            id: r.id, 
+            name: r.name, 
+            featured: r.featured 
+          }))
         }
       }
     })
-
   } catch (error) {
-    console.error('Debug homepage error:', error)
+    console.error('❌ Debug Homepage: Error:', error)
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      debug: null
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 })
   }
 } 
