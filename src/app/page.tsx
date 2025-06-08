@@ -42,6 +42,7 @@ interface Restaurant {
 
 async function getFeaturedPosts() {
   try {
+    console.log('🔍 HomePage: Fetching featured posts...')
     const posts = await prisma.post.findMany({
       where: {
         status: 'PUBLISHED',
@@ -56,9 +57,10 @@ async function getFeaturedPosts() {
       orderBy: { publishedAt: 'desc' },
       take: 6,
     })
+    console.log(`✅ HomePage: Found ${posts.length} featured posts`)
     return posts
   } catch (error) {
-    console.error('Error fetching featured posts:', error)
+    console.error('❌ HomePage: Error fetching featured posts:', error)
     return []
   }
 }
@@ -126,19 +128,23 @@ async function getBreakingNews() {
 
 async function getFeaturedRestaurants() {
   try {
+    console.log('🔍 HomePage: Fetching featured restaurants...')
     const restaurants = await prisma.restaurant.findMany({
       where: { featured: true },
       take: 6,
       orderBy: { createdAt: 'desc' }
     })
+    console.log(`✅ HomePage: Found ${restaurants.length} featured restaurants`)
     return restaurants
   } catch (error) {
-    console.error('Error fetching featured restaurants:', error)
+    console.error('❌ HomePage: Error fetching featured restaurants:', error)
     return []
   }
 }
 
 export default async function HomePage() {
+  console.log('🏠 HomePage: Starting data fetch...')
+  
   const [featuredPosts, recentPosts, trendingPosts, breakingNews, featuredRestaurants] = await Promise.all([
     getFeaturedPosts(),
     getRecentPosts(),
@@ -147,9 +153,21 @@ export default async function HomePage() {
     getFeaturedRestaurants(),
   ])
 
+  console.log('🏠 HomePage: Data fetch complete:', {
+    featuredPosts: featuredPosts.length,
+    recentPosts: recentPosts.length,
+    trendingPosts: trendingPosts.length,
+    breakingNews: breakingNews.length,
+    featuredRestaurants: featuredRestaurants.length
+  })
+
   const heroPost = featuredPosts[0]
   const secondaryFeatured = featuredPosts.slice(1, 3)
   const tertiaryFeatured = featuredPosts.slice(3, 6)
+
+  console.log('🏠 HomePage: Hero post:', heroPost ? heroPost.title : 'None')
+  console.log('🏠 HomePage: Secondary featured:', secondaryFeatured.length)
+  console.log('🏠 HomePage: Tertiary featured:', tertiaryFeatured.length)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -237,7 +255,7 @@ export default async function HomePage() {
             </div>
             
             {/* Hero Post Card */}
-            {heroPost && (
+            {heroPost ? (
               <div className="lg:block hidden">
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-300">
                   {heroPost.featuredImage && (
@@ -266,6 +284,12 @@ export default async function HomePage() {
                       <span>{new Date(heroPost.publishedAt!).toLocaleDateString()}</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <div className="lg:block hidden">
+                <div className="bg-yellow-100 border-2 border-yellow-400 text-yellow-700 p-6 rounded-2xl">
+                  <strong>Debug:</strong> No hero post found. Featured posts: {featuredPosts.length}
                 </div>
               </div>
             )}
@@ -595,7 +619,12 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredRestaurants.map((restaurant: Restaurant) => (
+            {featuredRestaurants.length === 0 ? (
+              <div className="col-span-3 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg">
+                <strong>Debug:</strong> No featured restaurants found. Check database seeding.
+              </div>
+            ) : (
+              featuredRestaurants.map((restaurant: Restaurant) => (
               <article key={restaurant.id} className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-orange-300">
                 {restaurant.image && (
                   <div className="aspect-video overflow-hidden">
@@ -667,7 +696,7 @@ export default async function HomePage() {
                   </div>
                 </div>
               </article>
-            ))}
+            )))}
           </div>
         </div>
       </section>
